@@ -46,6 +46,9 @@ namespace gtksharp {
 
 			this.actViewBoxes = new Gtk.Action( "ViewBoxes", "Boxes", "View boxes", null );
 			this.actViewBoxes.Activated += (obj, evt) => this.OnViewBoxes();
+
+			this.actViewNotebook = new Gtk.Action( "ViewNotebook", "Notebook", "View notebook", null );
+			this.actViewNotebook.Activated += (obj, evt) => this.OnViewNotebook();
 		}
 
 		private void BuildMenu() {
@@ -64,6 +67,7 @@ namespace gtksharp {
 			miView.Submenu = mView;
 			mView.Append( this.actViewBoxes.CreateMenuItem() );
 			mView.Append( this.actViewFrames.CreateMenuItem() );
+			mView.Append( this.actViewNotebook.CreateMenuItem() );
 
 			menuBar.Append( miFile );
 			menuBar.Append( miView );
@@ -85,9 +89,13 @@ namespace gtksharp {
 			var btFrames = new Gtk.Button( new Gtk.Label( this.actViewFrames.Label ) );
 			btFrames.Clicked += (sender, e) => this.OnViewFrames();
 
+			var btNotebook = new Gtk.Button( new Gtk.Label( this.actViewNotebook.Label ) );
+			btNotebook.Clicked += (sender, e) => this.OnViewNotebook();
+
 			// Packing everything
 			vbBox.PackStart( btBoxes, false, false, 5 );
 			vbBox.PackStart( btFrames, false, false, 5 );
+			vbBox.PackStart( btNotebook, false, false, 5 );
 			hbBox.PackStart( this.edText, true, true, 5 );
 			hbBox.PackStart( vbBox, false, false, 5 );
 			this.vbMain.PackStart( hbBox, true, true, 5 );
@@ -97,6 +105,7 @@ namespace gtksharp {
 		private Gtk.Action actAbout;
 		private Gtk.Action actViewFrames;
 		private Gtk.Action actViewBoxes;
+		private Gtk.Action actViewNotebook;
 
 		private Gtk.VBox vbMain;
 		private Gtk.TextView edText;

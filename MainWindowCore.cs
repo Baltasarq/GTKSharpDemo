@@ -98,6 +98,30 @@ The main difference is that frames have a title, but you can still put a box ins
 			dlg.Run();
 			dlg.Destroy();
 		}
+
+		private void OnViewNotebook() {
+			var dlg = new Gtk.Dialog( "Boxes", this, Gtk.DialogFlags.Modal );
+			var nbTabs = new Gtk.Notebook();
+	
+			nbTabs.AppendPage( new Gtk.Label( "Page1" ), new Gtk.Label( "Page1" ) );
+			nbTabs.AppendPage( new Gtk.Label( "Page2" ), new Gtk.Label( "Page2" ) );
+
+			dlg.VBox.PackStart( nbTabs, true, true, 5 );
+
+			dlg.SetGeometryHints(
+				dlg,
+				new Gdk.Geometry() {
+					MinHeight = 200,
+					MinWidth = 320
+				},
+				Gdk.WindowHints.MinSize
+			);
+
+			dlg.AddButton( "Ok", Gtk.ResponseType.Ok );
+			dlg.ShowAll();
+			dlg.Run();
+			dlg.Destroy();
+		}
 	}
 }
 
