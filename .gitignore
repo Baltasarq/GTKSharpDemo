@@ -1,0 +1,12 @@
+# Preferences
+*.userprefs
+
+# Backup files
+*.bak
+*~
+
+# Binaries
+bin/
+obj/
+*.exe
+*.dll
