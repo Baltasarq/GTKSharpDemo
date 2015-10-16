@@ -84,13 +84,13 @@ namespace gtksharp {
 			this.edText.Editable = false;
 
 			var btBoxes = new Gtk.Button( new Gtk.Label( this.actViewBoxes.Label ) );
-			btBoxes.Clicked += (sender, e) => this.OnViewBoxes();
+			btBoxes.Clicked += (sender, e) => this.actViewBoxes.Activate();
 
 			var btFrames = new Gtk.Button( new Gtk.Label( this.actViewFrames.Label ) );
-			btFrames.Clicked += (sender, e) => this.OnViewFrames();
+			btFrames.Clicked += (sender, e) => this.actViewFrames.Activate();
 
 			var btNotebook = new Gtk.Button( new Gtk.Label( this.actViewNotebook.Label ) );
-			btNotebook.Clicked += (sender, e) => this.OnViewNotebook();
+			btNotebook.Clicked += (sender, e) => this.actViewNotebook.Activate();
 
 			// Packing everything
 			vbBox.PackStart( btBoxes, false, false, 5 );
