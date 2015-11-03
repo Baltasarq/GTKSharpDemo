@@ -15,8 +15,7 @@ You can see in the source code how to create a main menu. More important,
 you can check out how to set actions and reuse them though all your code.
 
 Use View >> Boxes to see a dialog with boxes, and View >> Frames with frames.
-The main difference is that frames have a title, but you can still put a box inside.
-			";
+The main difference is that frames have a title, but you can still put a box inside.";
 		}
 
 		private void OnAbout() {
@@ -119,6 +118,13 @@ The main difference is that frames have a title, but you can still put a box ins
 
 			dlg.AddButton( "Ok", Gtk.ResponseType.Ok );
 			dlg.ShowAll();
+			dlg.Run();
+			dlg.Destroy();
+		}
+
+		private void OnViewDrawing() {
+			var dlg = new DrawingDemo( this );
+
 			dlg.Run();
 			dlg.Destroy();
 		}
