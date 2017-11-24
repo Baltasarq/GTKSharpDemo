@@ -1,6 +1,6 @@
-﻿using System;
+﻿// GTKSharpDemo (c) 2015-17 MIT License <baltasarq@gmail.com>
 
-namespace gtksharp {
+namespace GTKSharpDemo {
 	public partial class MainWindow: Gtk.Window {
 		public MainWindow()
 			:base( Gtk.WindowType.Toplevel )
@@ -84,8 +84,7 @@ namespace gtksharp {
 			var vbBox = new Gtk.VBox( false, 5 );
 
 			// Widgets
-			this.edText = new Gtk.TextView();
-			this.edText.Editable = false;
+			this.edText = new Gtk.TextView { Editable = false };
 
 			var btBoxes = new Gtk.Button( new Gtk.Label( this.actViewBoxes.Label ) );
 			btBoxes.Clicked += (sender, e) => this.actViewBoxes.Activate();

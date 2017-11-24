@@ -1,6 +1,6 @@
-﻿using System;
+﻿// GTKSharpDemo (c) 2015-17 MIT License <baltasarq@gmail.com>
 
-namespace gtksharp {
+namespace GTKSharpDemo {
 	public partial class MainWindow {
 		private void OnClose() {
 			Gtk.Application.Quit();
@@ -19,24 +19,25 @@ The main difference is that frames have a title, but you can still put a box ins
 		}
 
 		private void OnAbout() {
-			var dlg = new Gtk.AboutDialog();
-
-			dlg.TransientFor = this;
-			dlg.WindowPosition = Gtk.WindowPosition.CenterOnParent;
-			dlg.Title = "About...";
-			dlg.Authors = new string[]{ "Baltasar" };
-			dlg.ProgramName = "Gtk# demo";
-			dlg.Version     = "v1.0";
-			dlg.Comments    = "Gtk# Demo for basic features";
-			dlg.License     = "MIT License";
-			dlg.Copyright   = "(c) baltasar 2015";
-			dlg.Website     = "http://github.com/Baltasarq/GTKSharpDemo/";
-
-			dlg.Run();
+            var dlg = new Gtk.AboutDialog {
+                TransientFor = this,
+                WindowPosition = Gtk.WindowPosition.CenterOnParent,
+                Title = "About...",
+                Authors = new string[] { "Baltasar" },
+                ProgramName = "Gtk# demo",
+                Version = "v1.0",
+                Comments = "Gtk# Demo for basic features",
+                License = "MIT License",
+                Copyright = "(c) baltasar 2015",
+                Website = "http://github.com/Baltasarq/GTKSharpDemo/"
+            };
+            
+            dlg.Run();
 			dlg.Destroy();
 		}
 
-		private void OnViewFrames() {
+		private void OnViewFrames()
+        {
 			var dlg = new Gtk.Dialog( "Frames", this, Gtk.DialogFlags.Modal );
 
 			var frame1 = new Gtk.Frame( "<b>Frame1</b>" );
@@ -69,15 +70,21 @@ The main difference is that frames have a title, but you can still put a box ins
 			dlg.Destroy();
 		}
 
-		private void OnViewBoxes() {
+		private void OnViewBoxes()
+        {
 			var dlg = new Gtk.Dialog( "Boxes", this, Gtk.DialogFlags.Modal );
 
-			var hbBox1 = new Gtk.HBox( false, 5 );
-			hbBox1.Add( new Gtk.Label( "This is hbox 1" ) );
-			var hbBox2 = new Gtk.HBox( false, 5 );
-			hbBox2.Add( new Gtk.Label( "This is hbox 2" ) );
-			var hbBox3 = new Gtk.HBox( false, 5 );
-			hbBox3.Add( new Gtk.Label( "This is hbox 3" ) );
+            var hbBox1 = new Gtk.HBox(false, 5 ) {
+                new Gtk.Label("This is hbox 1")
+            };
+            
+            var hbBox2 = new Gtk.HBox( false, 5 ) {
+		        new Gtk.Label( "This is hbox 2" )
+            };
+            
+			var hbBox3 = new Gtk.HBox( false, 5 ) {
+			    new Gtk.Label( "This is hbox 3" )
+            };
 
 			dlg.VBox.PackStart( hbBox1, true, true, 5 );
 			dlg.VBox.PackStart( hbBox2, true, true, 5 );
@@ -98,7 +105,8 @@ The main difference is that frames have a title, but you can still put a box ins
 			dlg.Destroy();
 		}
 
-		private void OnViewNotebook() {
+		private void OnViewNotebook()
+        {
 			var dlg = new Gtk.Dialog( "Boxes", this, Gtk.DialogFlags.Modal );
 			var nbTabs = new Gtk.Notebook();
 	
@@ -121,13 +129,39 @@ The main difference is that frames have a title, but you can still put a box ins
 			dlg.Run();
 			dlg.Destroy();
 		}
+        
+        private void OnViewDrawing()
+        {
+            var dlg = new Gtk.Dialog( "Drawing", this, Gtk.DialogFlags.Modal );
+            var swScroll = new Gtk.ScrolledWindow();
 
-		private void OnViewDrawing() {
-			var dlg = new DrawingDemo( this );
+            // Drawing area
+            Chart chart = new Chart( 512, 512 ) {
+                LegendY = "Sells (in thousands)",
+                LegendX = "Months",
+                Values = new[] { 10, 20, 30, 40, 25, 21, 11, 2, 28, 33, 18, 45 }
+            };
 
-			dlg.Run();
-			dlg.Destroy();
-		}
+            // Layout
+            swScroll.AddWithViewport( chart );
+            dlg.VBox.PackStart( swScroll, true, true, 5 );
+            dlg.AddButton( Gtk.Stock.Close, Gtk.ResponseType.Close );
+
+            // Polish
+            dlg.WindowPosition = Gtk.WindowPosition.CenterOnParent;
+            dlg.Resize( 640, 640 );
+            dlg.SetGeometryHints(
+                dlg,
+                new Gdk.Geometry() {
+                    MinWidth = 640,
+                    MinHeight = 640
+                },
+                Gdk.WindowHints.MinSize
+            );
+
+            dlg.ShowAll();
+            dlg.Run();
+            dlg.Destroy();  
+        }
 	}
 }
-

@@ -1,8 +1,8 @@
-﻿using System;
+﻿// GTKSharpDemo (c) 2015-17 MIT License <baltasarq@gmail.com>
 
-namespace gtksharp {
+namespace GTKSharpDemo {
 	public class Ppal {
-		public static void Main(string[] args) {
+		public static void Main() {
 			var wMain = new MainWindow();
 
 			Gtk.Application.Init();
