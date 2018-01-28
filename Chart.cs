@@ -3,25 +3,37 @@
 namespace GTKSharpDemo {
     using System.Linq;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
 
     /// <summary>
     /// Draws a simple chart.
     /// </summary>
     public class Chart: Gtk.DrawingArea {
+        /// <summary>Chart type.</summary>
         public enum ChartType { Lines, Bars };
+        /// <summary>Gets the default colors for each series' lines/bars.</summary>
+        public static ReadOnlyCollection<Cairo.Color> DefaultSeriesColors = 
+            new ReadOnlyCollection<Cairo.Color>( new [] {
+                new Cairo.Color( 128, 0, 0 ),
+                new Cairo.Color( 0, 0, 128 ),
+                new Cairo.Color( 128, 0, 128 ),
+                new Cairo.Color( 0, 128, 0 ),
+                new Cairo.Color( 0, 128, 128 ),
+        });
         
         public Chart(int width, int height)
         {
+            this.Grid = true;
             this.Width = width;
             this.Height = height;
-            this.values = new List<int>();
+            this.Values = new int[ 0 ][];
             this.FrameWidth = 50;
             this.Type = ChartType.Lines;
-            this.AxisLineWidth = 10;
-            this.DataLineWidth = 4;
+            this.AxisLineWidth = 4;
+            this.DataLineWidth = 2;
             this.LegendsFontSize = 14;
-            this.AxisLineColor = new Cairo.Color( 0, 0, 0 );
-            this.DataLineColor = new Cairo.Color( 255, 0, 0 );
+            this.AxisColor = new Cairo.Color( 0, 0, 0 );
+            this.SeriesColors = DefaultSeriesColors;
         
             this.SetSizeRequest( width, height );
             this.ExposeEvent += (o, args)  => this.OnExposeDrawingArea();
@@ -36,11 +48,46 @@ namespace GTKSharpDemo {
                 this.DrawAxis( canvas );
                 this.DrawData( canvas );
                 this.DrawLegends( canvas );
-                canvas.Stroke();
+                
+                if ( this.Grid ) {
+                    this.DrawGrid( canvas );
+                }
 
                 // Clean
                 canvas.GetTarget().Dispose();
             }
+        }
+        
+        private void DrawGrid(Cairo.Context canvas)
+        {
+            const int numLines = 10;
+            int maxHeight = this.DataOrgPosition.Y;
+            int maxWidth = this.FramedEndPosition.X;
+            int yGap = maxHeight / numLines;
+            int xGap = maxWidth / numLines;
+            int y = this.FramedOrgPosition.Y + yGap;
+            int x = this.FramedOrgPosition.X + xGap;
+            
+            canvas.SetSourceColor( this.AxisColor );
+            canvas.LineWidth = 1;
+            
+            // Draw horizontal lines
+            while( y < maxHeight ) {
+                canvas.MoveTo( this.FramedOrgPosition.X, y );
+                canvas.LineTo( this.FramedEndPosition.X, y );
+                
+                y += yGap;
+            }
+            
+            // Draw vertical lines
+            while( x < maxWidth ) {
+                canvas.MoveTo( x, this.FramedOrgPosition.Y );
+                canvas.LineTo( x, this.FramedEndPosition.Y );
+                
+                x += xGap;
+            }
+            
+            canvas.Stroke();
         }
         
         private void DrawLine(Cairo.Context canvas, Gdk.Point p1, Gdk.Point p2)
@@ -64,6 +111,7 @@ namespace GTKSharpDemo {
         private void DrawLegends(Cairo.Context canvas)
         {
             canvas.SetFontSize( this.LegendsFontSize );
+            canvas.SetSourceColor( this.AxisColor );
             
             this.DrawString(
                     canvas,
@@ -84,40 +132,46 @@ namespace GTKSharpDemo {
         
         private void DrawData(Cairo.Context canvas)
         {
-            int numValues = this.values.Count;
-            var p = this.DataOrgPosition;
-            int xGap = this.GraphWidth / ( numValues + 1 );
+            int colorIndex = 0;
             int baseLine = this.DataOrgPosition.Y;
+            
+            for(int numSerie = 0; numSerie < this.Values.Length; ++numSerie) { 
+	            this.NormalizeData( numSerie );
+                var p = this.DataOrgPosition;    
+                int numValues = this.normalizedData.Length;
+                int xGap = this.GraphWidth / ( numValues + 1 );
 
-            canvas.LineWidth = this.DataLineWidth;
-            canvas.SetSourceColor( this.DataLineColor );
-            
-            this.NormalizeData();
-            for(int i = 0; i < numValues; ++i) {
-                string tag = this.values[ i ].ToString();
-                var nextPoint = new Gdk.Point(
-                    p.X + xGap, baseLine - this.normalizedData[ i ]
-                );
+                // Set drawing colors and sizes
+                colorIndex = colorIndex % SeriesColors.Count();
+		        canvas.LineWidth = this.DataLineWidth;
+		        canvas.SetSourceColor( this.SeriesColors[ colorIndex++ ] );
                 
-                if ( this.Type == ChartType.Bars ) {
-                    p = new Gdk.Point( nextPoint.X, baseLine );
-                }
+                // Draw the series
+	            for(int i = 0; i < numValues; ++i) {
+                    int val = this.normalizedData[ i ];
+	                string tag = val.ToString();
+	                var nextPoint = new Gdk.Point( p.X + xGap, baseLine - val );
+	                
+	                if ( this.Type == ChartType.Bars ) {
+	                    p = new Gdk.Point( nextPoint.X, baseLine );
+	                }
+	                
+	                this.DrawLine( canvas, p, nextPoint );
+	                this.DrawString( canvas,
+	                                 new Gdk.Point( nextPoint.X,
+	                                                nextPoint.Y ),
+	                                 tag );
+	                p = nextPoint;
+	            }
                 
-                this.DrawLine( canvas, p, nextPoint );
-                this.DrawString( canvas,
-                                 new Gdk.Point( nextPoint.X,
-                                                nextPoint.Y ),
-                                 tag );
-                p = nextPoint;
+                canvas.Stroke();
             }
-            
-            canvas.Stroke();
         }
         
         private void DrawAxis(Cairo.Context canvas)
         {
             canvas.LineWidth = this.AxisLineWidth;
-            canvas.SetSourceColor( this.AxisLineColor );
+            canvas.SetSourceColor( this.AxisColor );
         
             // Y axis
             this.DrawLine( canvas, this.FramedOrgPosition,
@@ -134,16 +188,17 @@ namespace GTKSharpDemo {
             canvas.Stroke();                              
         }
 
-        private void NormalizeData()
+        private void NormalizeData(int numSerie)
         {
+            var values = new List<int>( this.Values[ numSerie ] );
             int maxHeight = this.DataOrgPosition.Y - this.FrameWidth;
-            int maxValue = this.values.Max();
+            int maxValue = values.Max();
 
-            this.normalizedData = this.values.ToArray();
+            this.normalizedData = values.ToArray();
 
             for(int i = 0; i < this.normalizedData.Length; ++i) {
                 this.normalizedData[ i ] =
-                                    ( this.values[ i ] * maxHeight ) / maxValue;
+                                    ( values[ i ] * maxHeight ) / maxValue;
             }
             
             return;
@@ -153,14 +208,8 @@ namespace GTKSharpDemo {
         /// Gets or sets the values used as data.
         /// </summary>
         /// <value>The values.</value>
-        public IEnumerable<int> Values {
-            get {
-                return this.values.ToArray();
-            }
-            set {
-                this.values.Clear();
-                this.values.AddRange( value );
-            }
+        public int[][] Values {
+            get; set;
         }
         
         /// <summary>
@@ -252,7 +301,7 @@ namespace GTKSharpDemo {
         /// Gets or sets the color of the axis bars.
         /// </summary>
         /// <value>The <see cref="Cairo.Color"/>  of the axis lines.</value>
-        public Cairo.Color AxisLineColor {
+        public Cairo.Color AxisColor {
             get; set;
         }
         
@@ -261,14 +310,6 @@ namespace GTKSharpDemo {
         /// </summary>
         /// <value>The width of the data lines/bars.</value>
         public int DataLineWidth {
-            get; set;
-        }
-        
-        /// <summary>
-        /// Gets or sets the color of the data lines/bars.
-        /// </summary>
-        /// <value>The <see cref="Cairo.Color"/>  of the data lines/bars.</value>
-        public Cairo.Color DataLineColor {
             get; set;
         }
         
@@ -295,8 +336,24 @@ namespace GTKSharpDemo {
         public int Width {
             private set; get;
         }
+        
+        /// <summary>
+        /// Gets or sets the series' colors.
+        /// </summary>
+        /// <value>The series colors, as an IEnumerable of Cairo.Color.</value>
+        public IList<Cairo.Color> SeriesColors {
+            get; set;
+        }
+        
+        /// <summary>
+        /// Gets or sets a value indicating whether
+        /// this <see cref="T:GTKSharpDemo.Chart"/> uses a grid.
+        /// </summary>
+        /// <value><c>true</c> to draw a grid;<c>false</c> otherwise.</value>
+        public bool Grid {
+            get; set;
+        }
 
-        private List<int> values;
         private int[] normalizedData;
     }
 }

@@ -134,12 +134,23 @@ The main difference is that frames have a title, but you can still put a box ins
         {
             var dlg = new Gtk.Dialog( "Drawing", this, Gtk.DialogFlags.Modal );
             var swScroll = new Gtk.ScrolledWindow();
+            var rnd = new System.Random();
+            int[][] valuesSeries = new int[3][];
+
+            // Create series            
+            for(int i = 0; i < valuesSeries.Length; ++i) {
+                valuesSeries[ i ] = new int[12];
+                
+                for(int j = 0; j < valuesSeries[ i ].Length; ++j) {
+                    valuesSeries[ i ][ j ] = rnd.Next( 50 );
+                }
+            }
 
             // Drawing area
             Chart chart = new Chart( 512, 512 ) {
                 LegendY = "Sells (in thousands)",
                 LegendX = "Months",
-                Values = new[] { 10, 20, 30, 40, 25, 21, 11, 2, 28, 33, 18, 45 }
+                Values = valuesSeries
             };
 
             // Layout
