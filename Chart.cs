@@ -134,11 +134,11 @@ namespace GTKSharpDemo {
         {
             int colorIndex = 0;
             int baseLine = this.DataOrgPosition.Y;
+            int[][] normSeries = this.NormalizeData();
             
-            for(int numSerie = 0; numSerie < this.Values.Length; ++numSerie) { 
-	            this.NormalizeData( numSerie );
+            for(int numSerie = 0; numSerie < normSeries.Length; ++numSerie) {	            
                 var p = this.DataOrgPosition;    
-                int numValues = this.normalizedData.Length;
+                int numValues = normSeries[ numSerie ].Length;
                 int xGap = this.GraphWidth / ( numValues + 1 );
 
                 // Set drawing colors and sizes
@@ -148,8 +148,8 @@ namespace GTKSharpDemo {
                 
                 // Draw the series
 	            for(int i = 0; i < numValues; ++i) {
-                    int val = this.normalizedData[ i ];
-	                string tag = val.ToString();
+                    int val = normSeries[ numSerie ][ i ];
+	                string tag = this.Values[ numSerie ][ i ].ToString();
 	                var nextPoint = new Gdk.Point( p.X + xGap, baseLine - val );
 	                
 	                if ( this.Type == ChartType.Bars ) {
@@ -188,20 +188,28 @@ namespace GTKSharpDemo {
             canvas.Stroke();                              
         }
 
-        private void NormalizeData(int numSerie)
+        private int[][] NormalizeData()
         {
-            var values = new List<int>( this.Values[ numSerie ] );
+            int[][] toret = new int[ this.Values.Length ][];
             int maxHeight = this.DataOrgPosition.Y - this.FrameWidth;
-            int maxValue = values.Max();
-
-            this.normalizedData = values.ToArray();
-
-            for(int i = 0; i < this.normalizedData.Length; ++i) {
-                this.normalizedData[ i ] =
-                                    ( values[ i ] * maxHeight ) / maxValue;
+            int maxValue = 0;
+            
+            // Find max value
+            foreach(IEnumerable<int> series in this.Values) {
+                maxValue = System.Math.Max( maxValue, series.Max() );
             }
             
-            return;
+            // Copy and normalize
+            for(int i = 0; i < toret.Length; ++i) {
+                toret[ i ] = new int[ this.Values[ i ].Length ];
+                
+                for(int j = 0; j < toret[ i ].Length; ++j) {
+                    toret[ i ][ j ] = ( this.Values[ i ][ j ] * maxHeight )
+                                        / maxValue;
+                }
+            }
+            
+            return toret;
         }
         
         /// <summary>
@@ -353,7 +361,5 @@ namespace GTKSharpDemo {
         public bool Grid {
             get; set;
         }
-
-        private int[] normalizedData;
     }
 }
